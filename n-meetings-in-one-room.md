@@ -2,19 +2,20 @@
 
 **Topic:** Greedy Algorithm  
 **Sheet:** Striver A2Z DSA Sheet  
-**Problem:** [TakeUForward — N Meetings in One Room](https://takeuforward.org/practice/dsa/n-meetings-in-one-room)  
-**Video:** [Striver's Explanation](https://www.youtube.com/watch?v=II6ziNnub1Q)
+**Problem:** [TakeUForward — N Meetings in One Room](https://takeuforward.org/practice/dsa/n-meetings-in-one-room)
 
 ## 1. Problem Understanding
 
-We are given two arrays:
+Humein do arrays diye gaye hain:
 
-- `start[i]` → starting time of meeting `i`
-- `end[i]` → ending time of meeting `i`
+- `start[i]` → Meeting `i` ka starting time.
+- `end[i]` → Meeting `i` ka ending time.
 
-Only one meeting can happen at a time. We need to **select the maximum number of non-overlapping meetings** in the same room.
+Ek room hai aur ek time par sirf ek meeting ho sakti hai.
 
-**Example**
+**Goal:** Maximum kitni meetings conduct kar sakte hain, ye find karna hai.
+
+### Example
 
 ```cpp
 start = {1, 3, 0, 5, 8, 5};
@@ -23,74 +24,61 @@ end   = {2, 4, 6, 7, 9, 9};
 
 **Output:** `4`
 
-One optimal selection is:
+Hum ye meetings select kar sakte hain:
 
 `(1,2) → (3,4) → (5,7) → (8,9)`
 
-## 2. Core Intuition — Why Greedy?
+Total 4 meetings.
 
-Imagine two available meetings:
+## 2. Core Intuition — Greedy Kyun?
+
+Maan lo do meetings hain:
 
 - Meeting A: `(1, 10)`
 - Meeting B: `(2, 3)`
 
-If we select A, the room stays occupied until time `10`.
+Agar hum Meeting A select karte hain, toh room time `10` tak occupied rahega.
 
-If we select B, the room becomes available at time `3`, leaving more opportunities for future meetings.
+Lekin agar Meeting B select karte hain, toh room time `3` par hi free ho jayega. Ab hum future mein aur meetings conduct kar sakte hain.
 
-**Greedy rule: Always choose the compatible meeting that ends earliest.**
+**Isliye greedy choice hai: Hamesha us meeting ko prefer karo jo sabse pehle end hoti hai.**
 
-Why?
+### Greedy ka main idea
 
-1. An earlier ending time frees the room sooner.
-2. More time remains for other meetings.
-3. We make the best local choice at each step to maximize the total number of meetings.
+Har step par aisa local decision lena jo future mein maximum opportunities de.
 
-We do not care about the longest meeting or the earliest starting meeting. Our goal is to accommodate the **maximum count**.
+Yahan earliest ending meeting select karne se room jaldi free hota hai aur baaki meetings ke liye zyada chances milte hain.
 
-## 3. Why Sort by Ending Time?
+## 3. Approach — Step by Step
 
-Suppose meetings are sorted by their ending times in ascending order.
+1. Har meeting ka `start`, `end` aur `pos` ek saath store karo.
+2. Meetings ko `end` time ke ascending order mein sort karo.
+3. Pehli meeting select karo, kyunki woh sabse pehle end hoti hai.
+4. `cnt = 1` rakho, kyunki ek meeting select ho chuki hai.
+5. `freeTime` mein selected meeting ka ending time store karo.
+6. Baaki meetings traverse karo:
+   - Agar `arr[i].start > freeTime` hai, toh meeting select karo.
+   - `cnt++` karo.
+   - `freeTime = arr[i].end` update karo.
+7. Finally `cnt` return kar do.
 
-The first meeting ends earliest among all available meetings. After selecting it, we look for the next meeting that starts after it ends.
-
-Because the meetings are sorted by end time, we process promising candidates first.
-
-**Important:** Sorting by start time or duration does not guarantee the maximum number of meetings.
-
-## 4. Approach
-
-1. Create a vector of meetings containing `{start, end, position}`.
-2. Sort the meetings according to their ending time.
-3. Select the first meeting.
-4. Set `freeTime` to its ending time and initialize `cnt = 1`.
-5. Traverse the remaining meetings:
-   - If `arr[i].start > freeTime`, select the meeting.
-   - Increase `cnt`.
-   - Update `freeTime = arr[i].end`.
-6. Return `cnt`.
-
-**Why `>` and not `>=`?**
-
-In this problem, a meeting starting exactly when the previous meeting ends is considered overlapping. Therefore, the next meeting must start strictly after `freeTime`.
-
-## 5. C++ Code — Striver's Approach
+## 4. C++ Code — Striver's Approach
 
 ```cpp
-class Meeting {
+class meeting {
 public:
     int start;
     int end;
     int pos;
 
-    Meeting(int s, int e, int p) {
+    meeting(int s, int e, int p) {
         start = s;
         end = e;
         pos = p;
     }
 };
 
-bool comp(Meeting a, Meeting b) {
+bool comp(meeting a, meeting b) {
     return a.end < b.end;
 }
 
@@ -98,11 +86,11 @@ class Solution {
 public:
     int maxMeetings(vector<int>& start, vector<int>& end) {
         int n = start.size();
-        vector<Meeting> arr;
+        vector<meeting> arr;
 
         for (int i = 0; i < n; i++) {
             arr.push_back(
-                Meeting(start[i], end[i], i + 1)
+                meeting(start[i], end[i], i + 1)
             );
         }
 
@@ -123,71 +111,124 @@ public:
 };
 ```
 
-## 6. Code Breakdown — Understand Every Part
+*Note: Agar platform par class ka naam `Meeting` ya function signature alag diya hai, toh uske according adjust karna. Algorithm same rahega.*
 
-### Part A: Store each meeting
+## 5. Code Ko Chhote Parts Mein Samjho
+
+### Part A: Meeting ka data store karna
 
 ```cpp
-arr.push_back(Meeting(start[i], end[i], i + 1));
+class meeting {
+public:
+    int start;
+    int end;
+    int pos;
+};
 ```
 
-Each meeting stores three values:
+Har meeting ke 3 attributes hain:
 
-- `start` — when it begins.
-- `end` — when it finishes.
-- `pos` — its original meeting number, using 1-based indexing.
+- `start` — meeting kab shuru hogi.
+- `end` — meeting kab khatam hogi.
+- `pos` — original meeting number.
 
-**Why store them together?**
+**Teeno ko ek saath kyun rakha?**
 
-If we sort the meetings, their start and end times must remain associated with the correct meeting.
+Agar hum sirf `end` array ko sort kar dein, toh original starting aur ending times ka connection disturb ho sakta hai.
 
-The `pos` field is useful when we need to print the original meeting numbers in the selected order. For this problem, which asks only for the count, it is not necessary for the final answer.
+Isliye poori meeting ko ek unit ki tarah store karte hain.
 
-### Part B: The comparator
+### Part B: Constructor samjho
 
 ```cpp
-bool comp(Meeting a, Meeting b) {
+meeting(int s, int e, int p) {
+    start = s;
+    end = e;
+    pos = p;
+}
+```
+
+Jab hum likhte hain:
+
+```cpp
+meeting(start[i], end[i], i + 1);
+```
+
+Toh constructor values ko object ke andar store kar deta hai.
+
+Example:
+
+```cpp
+meeting(3, 4, 2);
+```
+
+Is meeting ke liye:
+
+```cpp
+start = 3;
+end = 4;
+pos = 2;
+```
+
+### Part C: Comparator — Sorting ka logic
+
+```cpp
+bool comp(meeting a, meeting b) {
     return a.end < b.end;
 }
 ```
 
-The comparator tells `sort()` how to order two meetings.
+Ye function `sort()` ko batata hai ki meetings ko kis order mein rakhna hai.
 
-- If `a.end < b.end` is `true`, `a` should come before `b`.
-- If it is `false`, `a` should not be placed before `b` on the basis of this comparison.
+- Agar `a.end < b.end` true hai, toh `a` ko `b` se pehle rakhna hai.
+- Agar false hai, toh `a` ko `b` se pehle rakhne ki zaroorat nahi hai.
 
-The result is ascending order of ending time.
+**Yaad rakho:** Comparator ka kaam sirf sorting order decide karna hai. Meeting select karna iska kaam nahi hai.
 
-**Remember:** The comparator determines the sorting order. It does not select meetings.
+### Part D: Meeting objects banana
 
-### Part C: Sort the meetings
+```cpp
+int n = start.size();
+vector<meeting> arr;
+
+for (int i = 0; i < n; i++) {
+    arr.push_back(meeting(start[i], end[i], i + 1));
+}
+```
+
+- `n` → total meetings.
+- `arr` → meetings store karne ke liye vector.
+- `push_back()` → har meeting ko vector mein add karta hai.
+- `i + 1` → meeting ki 1-based position.
+
+### Part E: Sorting
 
 ```cpp
 sort(arr.begin(), arr.end(), comp);
 ```
 
-This arranges meetings from the smallest ending time to the largest.
+Ab meetings ending time ke ascending order mein aa jayengi.
 
-Sorting establishes the order in which the greedy algorithm considers meetings.
+**Core reason:** Humein pehle woh meeting consider karni hai jo room ko sabse jaldi free kare.
 
-### Part D: Initialize the answer
+### Part F: Initialization
 
 ```cpp
 int cnt = 1;
 int freeTime = arr[0].end;
 ```
 
-**Why `cnt = 1`?**
+**`cnt = 1` kyun?**
 
-The first meeting in the sorted array ends earliest, so we select it. Therefore, one meeting is already selected.
+Sorted array ki pehli meeting hum select kar chuke hain. Isliye count 1 se start hoga.
 
-**Why `freeTime = arr[0].end`?**
+**`freeTime = arr[0].end` kyun?**
 
-It records when the room becomes available after the last selected meeting.
+Ye batata hai ki selected meeting khatam hone ke baad room kab available hoga.
 
-We compare every future meeting's start time with this value.
+Example: Agar pehli meeting `(1,2)` hai, toh `freeTime = 2`.
 
-### Part E: Traverse the remaining meetings
+### Part G: Baaki meetings check karna
 
 ```cpp
 for (int i = 1; i < n; i++) {
@@ -198,37 +239,37 @@ for (int i = 1; i < n; i++) {
 }
 ```
 
-We start at index `1` because index `0` has already been selected.
+Loop `i = 1` se shuru hota hai kyunki pehli meeting already select ho chuki hai.
 
-**The condition:**
+**Condition:**
 
 ```cpp
 arr[i].start > freeTime
 ```
 
-This checks whether the current meeting can begin without overlapping the last selected meeting.
+Check karta hai ki current meeting, last selected meeting ke khatam hone ke baad shuru ho rahi hai ya nahi.
 
-**If the condition is true:**
+Agar condition true hai:
 
 ```cpp
 cnt++;
 freeTime = arr[i].end;
 ```
 
-- `cnt++` counts the newly selected meeting.
-- `freeTime = arr[i].end` updates the room's next available time.
+- `cnt++` → ek aur meeting select ho gayi.
+- `freeTime` update → ab room current selected meeting ke end par free hoga.
 
-**If the condition is false:** Skip the meeting. Do not update `cnt` or `freeTime`.
+Agar condition false hai, toh meeting skip kar do. `cnt` aur `freeTime` ko change mat karo.
 
-### Part F: Return the answer
+### Part H: Answer return karna
 
 ```cpp
 return cnt;
 ```
 
-After examining all meetings, return the maximum count found by the greedy strategy.
+Saari meetings check karne ke baad selected meetings ka count return kar do.
 
-## 7. Dry Run
+## 6. Dry Run
 
 Input:
 
@@ -237,66 +278,78 @@ start = {1, 3, 0, 5, 8, 5};
 end   = {2, 4, 6, 7, 9, 9};
 ```
 
-After sorting by ending time:
+Sorting ke baad:
 
 | Start | End | Decision | Reason |
 |---:|---:|---|---|
-| 1 | 2 | Select | First meeting |
+| 1 | 2 | Select | Pehli meeting |
 | 3 | 4 | Select | `3 > 2` |
 | 0 | 6 | Skip | `0` is not greater than `4` |
 | 5 | 7 | Select | `5 > 4` |
 | 8 | 9 | Select | `8 > 7` |
 | 5 | 9 | Skip | `5` is not greater than `9` |
 
-Final values:
+Final answer:
 
 ```cpp
 cnt = 4;
 freeTime = 9;
 ```
 
-**Answer:** `4`
+**Output: `4`**
 
-## 8. Important Observations
+## 7. Important Details
 
-- The greedy choice is based on the **ending time**, not the starting time.
-- `freeTime` always represents the end time of the last selected meeting.
-- Update `freeTime` only when a meeting is selected.
-- The first meeting is selected because it has the earliest ending time.
-- `pos` is useful for recovering the original meeting numbers but is not required when returning only the count.
-- If there is one meeting, the answer is `1`.
-- The given constraint ensures `N >= 1`, so initializing `cnt = 1` is valid.
+### `>` kyun use kiya, `>=` kyun nahi?
 
-## 9. Why Is This Greedy Choice Optimal?
+Is problem ke convention ke according, agar ek meeting time `2` par end hoti hai aur doosri time `2` par start hoti hai, toh unhe compatible nahi maana jaata.
 
-Consider an optimal schedule whose first selected meeting is not the meeting that finishes earliest.
+Isliye:
 
-We can replace that first meeting with the earliest-ending meeting. Since the replacement ends no later than the original meeting, all the subsequent meetings in the optimal schedule can still fit.
+```cpp
+arr[i].start > freeTime
+```
 
-The number of selected meetings does not decrease.
+Use karte hain.
 
-Therefore, an optimal solution can always begin with the earliest-ending meeting. Applying the same reasoning to the remaining meetings establishes the greedy strategy.
+### `pos` ka kya use hai?
 
-This is the **exchange argument** for the classic Activity Selection problem.
+`pos` original meeting number store karta hai. Agar humein sirf count return karna hai, toh `pos` ki zaroorat nahi hai.
 
-## 10. Complexity Analysis
+Lekin agar selected meetings ke original indices print karne hon, toh `pos` useful hoga.
 
-Let `N` be the number of meetings.
+### `freeTime` har baar update kyun nahi karte?
 
-- **Time Complexity:** `O(N log N)` for sorting, followed by an `O(N)` traversal.
-- **Auxiliary Space:** `O(N)` for storing the meetings in the vector, excluding the sorting implementation's internal stack.
+Sirf selected meeting ke end time par room ki availability change hoti hai. Skipped meeting ko select hi nahi kiya, isliye uske end time se `freeTime` update nahi karna chahiye.
 
-## 11. Common Mistakes
+## 8. Greedy Choice Optimal Kyun Hai?
 
-1. Sorting by start time instead of end time.
-2. Forgetting to update `freeTime` after selecting a meeting.
-3. Updating `freeTime` even when a meeting is skipped.
-4. Using `>=` instead of `>` for the compatibility condition in this version of the problem.
-5. Starting the loop at index `0` after already counting the first meeting.
-6. Forgetting that `cnt = 1` assumes at least one meeting exists.
+Maan lo kisi optimal solution mein pehli meeting woh nahi hai jo sabse jaldi end hoti hai.
 
-## 12. Pattern to Remember
+Hum us pehli meeting ko earliest-ending meeting se replace kar sakte hain. Kyunki nayi meeting jaldi ya usi time end hogi, baad ki selected meetings ke liye room available reh sakta hai.
 
-**Sort → Select the first → Check compatibility → Count → Update the ending time.**
+Is replacement se total meetings ki count kam nahi hoti.
 
-This problem is also known as **Activity Selection** and is a foundational example of the greedy algorithm.
+Isi logic ko remaining meetings par repeat kar sakte hain. Isliye earliest-ending meeting choose karne wali greedy strategy optimal hai.
+
+## 9. Complexity Analysis
+
+- **Time Complexity:** `O(N log N)` — sorting ki wajah se.
+- **Auxiliary Space:** `O(N)` — meetings store karne ke liye vector.
+
+## 10. Common Mistakes
+
+1. Ending time ki jagah starting time se sort karna.
+2. Meeting select karne ke baad `freeTime` update karna bhool jaana.
+3. Meeting skip hone par bhi `freeTime` update kar dena.
+4. `>` ki jagah `>=` use karna, jab problem strict compatibility maangti hai.
+5. Pehli meeting count karne ke baad loop ko `i = 0` se start karna.
+6. `pos` ko necessary samajhna, jab sirf count chahiye.
+
+## 11. Quick Revision Formula
+
+**Sort by end time → First meeting select → Compatibility check → Count increase → `freeTime` update.**
+
+Ek line mein intuition:
+
+**Jo meeting sabse jaldi khatam hoti hai, use choose karo taaki room baaki meetings ke liye jaldi available ho sake.**
