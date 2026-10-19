@@ -1,9 +1,5 @@
 # N Meetings in One Room — Greedy
 
-**Topic:** Greedy Algorithm  
-**Sheet:** Striver A2Z DSA Sheet  
-**Problem:** [TakeUForward — N Meetings in One Room](https://takeuforward.org/practice/dsa/n-meetings-in-one-room)
-
 ## 1. Problem Understanding
 
 Humein do arrays diye gaye hain:
